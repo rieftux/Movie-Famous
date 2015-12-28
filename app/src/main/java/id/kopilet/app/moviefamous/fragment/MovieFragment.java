@@ -50,8 +50,6 @@ public class MovieFragment extends Fragment {
 
     private ArrayList<Movie> mMovieArrayList;
 
-    private Movie[] mMovie;
-
     public MovieFragment() {
         setHasOptionsMenu(true);
     }
@@ -181,7 +179,7 @@ public class MovieFragment extends Fragment {
             JSONObject movieJson = new JSONObject(movieJsonStr);
             JSONArray movieArray = movieJson.getJSONArray(MOVIE_LIST);
 
-            mMovie = new Movie[movieArray.length()];
+            Movie[] mMovie = new Movie[movieArray.length()];
             for (int i = 0; i < movieArray.length(); i++) {
 
                 String poster_path;
@@ -242,7 +240,8 @@ public class MovieFragment extends Fragment {
 
                 // Read the input stream into a String
                 InputStream inputStream = urlConnection.getInputStream();
-                StringBuffer buffer = new StringBuffer();
+//                StringBuffer buffer = new StringBuffer();
+                StringBuilder buffer = new StringBuilder();
                 if (inputStream == null) {
                     // Nothing to do.
                     return null;
@@ -254,7 +253,8 @@ public class MovieFragment extends Fragment {
                     // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
                     // But it does make debugging a *lot* easier if you print out the completed
                     // buffer for debugging.
-                    buffer.append(line + "\n");
+//                    buffer.append(line + "\n");
+                    buffer.append(line);
                 }
 
                 if (buffer.length() == 0) {

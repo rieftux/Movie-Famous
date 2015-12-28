@@ -16,10 +16,9 @@ import id.kopilet.app.moviefamous.model.Movie;
 
 /**
  * Created by rieftux on 27/12/15.
+ * This is an adapter for GridView which load poster film
  */
 public class MovieGridAdapter extends ArrayAdapter<Movie> {
-
-    private static final String LOG_TAG = MovieGridAdapter.class.getSimpleName();
 
     /**
      * This is our own custom constructor (it doesn't mirror a superclass constructor).

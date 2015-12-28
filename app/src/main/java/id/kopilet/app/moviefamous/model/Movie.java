@@ -5,6 +5,7 @@ import android.os.Parcelable;
 
 /**
  * Created by rieftux on 27/12/15.
+ * This is a POJO for Movie data from MovieDB API with implement Parcelable for bundling data
  */
 public class Movie implements Parcelable{
 

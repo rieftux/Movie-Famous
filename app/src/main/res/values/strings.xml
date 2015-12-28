@@ -11,6 +11,8 @@
     <string name="action_sort" translatable="false">Sort By</string>
 
 
+    <string name="poster_desc" translatable="false">Poster Film</string>
+
     <!-- Label for the temperature units preference [CHAR LIMIT=30] -->
     <string name="pref_sort_label">Sort By</string>
 
