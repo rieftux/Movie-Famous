@@ -106,10 +106,6 @@ public class MovieFragment extends Fragment {
 
         View rootView = inflater.inflate(R.layout.fragment_movie, container, false);
 
-//        mMovieArrayList = new ArrayList<>();
-
-//        mMovieGridAdapter = new MovieGridAdapter(getActivity(), mMovieArrayList);
-
         // Get a reference to the GridView, and attach this adapter to it.
         GridView gridView = (GridView) rootView.findViewById(R.id.gridview_movie);
         gridView.setAdapter(mMovieGridAdapter);
@@ -170,6 +166,7 @@ public class MovieFragment extends Fragment {
 
             // These are the names of the JSON objects that need to be extracted.
             final String MOVIE_LIST = "results";
+            final String MOVIE_ID = "id";
             final String MOVIE_POSTER = "poster_path";
             final String MOVIE_ORI_TITLE = "original_title";
             final String MOVIE_SYNOPSIS = "overview";
@@ -182,6 +179,7 @@ public class MovieFragment extends Fragment {
             Movie[] mMovie = new Movie[movieArray.length()];
             for (int i = 0; i < movieArray.length(); i++) {
 
+                int id;
                 String poster_path;
                 String title;
                 String synopsis;
@@ -192,13 +190,14 @@ public class MovieFragment extends Fragment {
 
                 JSONObject movieObj = movieArray.getJSONObject(i);
 
+                id = movieObj.getInt(MOVIE_ID);
                 poster_path = movieObj.getString(MOVIE_POSTER);
                 title = movieObj.getString(MOVIE_ORI_TITLE);
                 synopsis = movieObj.getString(MOVIE_SYNOPSIS);
                 rating = String.valueOf(movieObj.getDouble(MOVIE_RATING));
                 release = getReadableDateString(movieObj.getString(MOVIE_RELEASE));
 
-                mMovie[i] = new Movie(urlPoster.concat(poster_path), title, synopsis, rating, release);
+                mMovie[i] = new Movie(id, urlPoster.concat(poster_path), title, synopsis, rating, release);
             }
 
             return mMovie;
@@ -306,4 +305,5 @@ public class MovieFragment extends Fragment {
             }
         }
     }
+
 }

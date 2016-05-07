@@ -44,19 +44,42 @@ public class MovieGridAdapter extends ArrayAdapter<Movie> {
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
         // Gets the AndroidFlavor object from the ArrayAdapter at the appropriate position
-        Movie movie = getItem(position);
+//        Movie movie = getItem(position);
         // Adapters recycle views to AdapterViews.
         // If this is a new View object we're getting, then inflate the layout.
         // If not, this view already has the layout inflated from a previous call to getView,
         // and we modify the View widgets as usual.
+//        if (convertView == null) {
+//            convertView = LayoutInflater.from(getContext()).inflate(
+//                    R.layout.list_thumb_movie, parent, false);
+//        }
+//
+//        ImageView thumb_poster = (ImageView) convertView.findViewById(R.id.thumb_movie);
+//        Picasso.with(getContext()).load(movie.getPoster()).into(thumb_poster);
+
+//        return convertView;
+
+        MovieHolder movieHolder;
+
         if (convertView == null) {
-            convertView = LayoutInflater.from(getContext()).inflate(
-                    R.layout.list_thumb_movie, parent, false);
+            convertView = LayoutInflater.from(getContext()).inflate(R.layout.list_thumb_movie, parent, false);
+
+            movieHolder = new MovieHolder(convertView);
+            convertView.setTag(movieHolder);
+        } else {
+            movieHolder = (MovieHolder) convertView.getTag();
         }
 
-        ImageView thumb_poster = (ImageView) convertView.findViewById(R.id.thumb_movie);
-        Picasso.with(getContext()).load(movie.getPoster()).into(thumb_poster);
-
+        Movie movie = getItem(position);
+        Picasso.with(getContext()).load(movie.getPoster()).into(movieHolder.poster);
         return convertView;
+    }
+
+    protected static class MovieHolder {
+        public final ImageView poster;
+
+        public MovieHolder(View view) {
+            this.poster = (ImageView) view.findViewById(R.id.thumb_movie);
+        }
     }
 }
