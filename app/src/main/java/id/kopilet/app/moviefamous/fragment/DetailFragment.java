@@ -1,5 +1,6 @@
 package id.kopilet.app.moviefamous.fragment;
 
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.AsyncTask;
@@ -9,8 +10,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.AdapterView;
 import android.widget.ImageView;
-import android.widget.ListView;
 import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
@@ -30,8 +31,11 @@ import java.util.Arrays;
 
 import id.kopilet.app.moviefamous.BuildConfig;
 import id.kopilet.app.moviefamous.R;
+import id.kopilet.app.moviefamous.adapter.ReviewListAdapter;
 import id.kopilet.app.moviefamous.adapter.TrailerListAdapter;
+import id.kopilet.app.moviefamous.customview.NonScrollListView;
 import id.kopilet.app.moviefamous.model.Movie;
+import id.kopilet.app.moviefamous.model.ReviewItem;
 import id.kopilet.app.moviefamous.model.TrailerItem;
 
 /**
@@ -39,35 +43,15 @@ import id.kopilet.app.moviefamous.model.TrailerItem;
  */
 public class DetailFragment extends Fragment {
 
-    protected final String LOG_TAG = DetailFragment.class.getSimpleName();
+    private static final String LOG_TAG = DetailFragment.class.getSimpleName();
 
     private TrailerListAdapter mTrailerAdapter;
+    private ReviewListAdapter mReviewAdapter;
     private ArrayList<TrailerItem> mTrailerList;
+    private ArrayList<ReviewItem> mReviewList;
 
-    Movie movie;
-
-    public DetailFragment() {
-    }
-
-    @Override
-    public void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        if (savedInstanceState == null || savedInstanceState.containsKey("trailers")) {
-            mTrailerList = new ArrayList<>();
-            mTrailerAdapter = new TrailerListAdapter(getActivity(), new ArrayList<TrailerItem>());
-            Log.v(LOG_TAG, "instance state null");
-        } else {
-            mTrailerList = savedInstanceState.getParcelableArrayList("trailers");
-            mTrailerAdapter = new TrailerListAdapter(getActivity(), mTrailerList);
-            Log.v(LOG_TAG, "using saved instance state");
-        }
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        outState.putParcelableArrayList("trailers", mTrailerList);
-        super.onSaveInstanceState(outState);
-    }
+    private Movie movie;
+    private int idMovie;
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -77,9 +61,10 @@ public class DetailFragment extends Fragment {
 
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
 
-
         if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
             movie = intent.getParcelableExtra(Intent.EXTRA_TEXT);
+            idMovie = movie.getId();
+
             ImageView poster = (ImageView) rootView.findViewById(R.id.poster_thumb);
             Picasso.with(getContext()).load(movie.getPoster()).into(poster);
 
@@ -88,25 +73,50 @@ public class DetailFragment extends Fragment {
             ((TextView) rootView.findViewById(R.id.textRelease)).setText(movie.getRelease());
             ((TextView) rootView.findViewById(R.id.textSynopsis)).setText(movie.getSynopsis());
 
-            ListView listView = (ListView) rootView.findViewById(R.id.listTrailer);
-            listView.setAdapter(mTrailerAdapter);
+            mTrailerList = new ArrayList<>();
+            mTrailerAdapter = new TrailerListAdapter(getActivity(), mTrailerList);
 
-            getTrailer(movie.getId());
+            mReviewList = new ArrayList<>();
+            mReviewAdapter = new ReviewListAdapter(getActivity(), mReviewList);
 
+            NonScrollListView lvTrailer = (NonScrollListView) rootView.findViewById(R.id.listTrailer);
+            NonScrollListView lvReview = (NonScrollListView) rootView.findViewById(R.id.listReview);
+            lvTrailer.setAdapter(mTrailerAdapter);
+            lvReview.setAdapter(mReviewAdapter);
+
+            // Youtube Intent
+            lvTrailer.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+                @Override
+                public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                    String videoID = mTrailerAdapter.getItem(position).getKey();
+                    try {
+                        Intent intent = new Intent(Intent.ACTION_VIEW, Uri.parse("vnd.youtube:" + videoID));
+                        startActivity(intent);
+                    } catch (ActivityNotFoundException ex) {
+                        Intent intent = new Intent(Intent.ACTION_VIEW,
+                                Uri.parse("http://www.youtube.com/watch?v=" + videoID));
+                        startActivity(intent);
+                    }
+                }
+            });
+
+            getTrailer(idMovie);
+            getReview(idMovie);
         }
 
         return rootView;
     }
 
-    protected void getTrailer(int idFilm) {
-        FetchTrailerTask trailerTask = new FetchTrailerTask();
-        trailerTask.execute(idFilm);
-        Log.i(LOG_TAG, "Get trailer");
+    private void getTrailer(int id) {
+        Log.v(LOG_TAG, "get trailer");
+        FetchTrailer fetchTrailer = new FetchTrailer();
+        fetchTrailer.execute(id);
     }
 
-    protected class FetchTrailerTask extends AsyncTask<Integer, Void, TrailerItem[]> {
+    // Asyntack for get Trailer
+    private class FetchTrailer extends AsyncTask<Integer, Void, TrailerItem[]> {
 
-        protected TrailerItem[] getTrailerDataFromJson(String trailerJsonStr) throws JSONException {
+        private TrailerItem[] getTrailerDataFromJson(String trailerJsonStr) throws JSONException {
             // These are the names of the JSON objects that need to be extracted.
             final String TRAILER_LIST = "results";
             final String TRAILER_KEY_URL = "key";
@@ -120,8 +130,6 @@ public class DetailFragment extends Fragment {
 
                 String key;
                 String name;
-
-                String youtubeUrl;
 
                 JSONObject trailerObj = trailerArray.getJSONObject(i);
                 key = trailerObj.getString(TRAILER_KEY_URL);
@@ -161,7 +169,7 @@ public class DetailFragment extends Fragment {
 
                 URL url = new URL(builtUri.toString());
 
-                Log.v(LOG_TAG, "URL : " + url);
+                Log.v(LOG_TAG, "VIDEOS MOVIE ID : " + MOVIE_ID);
 
                 // Create the request to MovieDB, and open the connection
                 urlConnection = (HttpURLConnection) url.openConnection();
@@ -226,14 +234,156 @@ public class DetailFragment extends Fragment {
 
         @Override
         protected void onPostExecute(TrailerItem[] trailerItems) {
-
             if (trailerItems != null) {
                 mTrailerAdapter.clear();
                 for (TrailerItem t : trailerItems) {
                     mTrailerAdapter.add(t);
+
                 }
                 mTrailerList.clear();
                 mTrailerList.addAll(Arrays.asList(trailerItems));
+                mTrailerAdapter.notifyDataSetChanged();
+            }
+        }
+    }
+
+    private void getReview(int id) {
+        Log.v(LOG_TAG, "get review");
+        FetchReview fetchTrailer = new FetchReview();
+        fetchTrailer.execute(id);
+    }
+
+    // Asyntack for get Review
+    private class FetchReview extends AsyncTask<Integer, Void, ReviewItem[]> {
+
+        private ReviewItem[] getReviewDataFromJson(String reviewJsonStr) throws JSONException {
+            // These are the names of the JSON objects that need to be extracted.
+            final String REVIEW_LIST = "results";
+            final String REVIEW_AUTHOR = "author";
+            final String REVIEW_CONTENT = "content";
+            final String REVIEW_URL = "url";
+
+            JSONObject reviewJson = new JSONObject(reviewJsonStr);
+            JSONArray reviewArray = reviewJson.getJSONArray(REVIEW_LIST);
+
+            ReviewItem reviewItems[] = new ReviewItem[reviewArray.length()];
+            for (int i = 0; i < reviewArray.length(); i++) {
+
+                String author;
+                String content;
+                String url;
+
+                JSONObject reviewObj = reviewArray.getJSONObject(i);
+                author = reviewObj.getString(REVIEW_AUTHOR);
+                content = reviewObj.getString(REVIEW_CONTENT);
+                url = reviewObj.getString(REVIEW_URL);
+
+                reviewItems[i] = new ReviewItem(author, content, url);
+            }
+
+            return reviewItems;
+        }
+
+        @Override
+        protected ReviewItem[] doInBackground(Integer... params) {
+            // These two need to be declared outside the try/catch
+            // so that they can be closed in the finally block.
+            HttpURLConnection urlConnection = null;
+            BufferedReader reader = null;
+
+            // Will contain the raw JSON response as a string.
+            String reviewJsonStr = null;
+
+            try {
+                // Construct the URL for the The Movie DB query
+                // Possible parameters are available at The Movie DB's apiary page, at
+                // http://docs.themoviedb.apiary.io/#
+
+                final String MOVIEDB_TRAILER_URL = "http://api.themoviedb.org/3/movie/";
+                final String MOVIE_ID = params[0].toString();
+                final String REVIEW_PARAM = "reviews";
+                final String API_KEY_PARAM = "api_key";
+
+                Uri builtUri = Uri.parse(MOVIEDB_TRAILER_URL).buildUpon()
+                        .appendPath(MOVIE_ID)
+                        .appendPath(REVIEW_PARAM)
+                        .appendQueryParameter(API_KEY_PARAM, BuildConfig.THE_MOVIE_DB_API_KEY)
+                        .build();
+
+                URL url = new URL(builtUri.toString());
+
+                Log.v(LOG_TAG, "REVIEW MOVIE ID : " + MOVIE_ID);
+
+                // Create the request to MovieDB, and open the connection
+                urlConnection = (HttpURLConnection) url.openConnection();
+                urlConnection.setRequestMethod("GET");
+                urlConnection.connect();
+
+                // Read the input stream into a String
+                InputStream inputStream = urlConnection.getInputStream();
+                // StringBuffer buffer = new StringBuffer();
+                StringBuilder buffer = new StringBuilder();
+                if (inputStream == null) {
+                    // Nothing to do.
+                    return null;
+                }
+                reader = new BufferedReader(new InputStreamReader(inputStream));
+
+                String line;
+                while ((line = reader.readLine()) != null) {
+                    // Since it's JSON, adding a newline isn't necessary (it won't affect parsing)
+                    // But it does make debugging a *lot* easier if you print out the completed
+                    // buffer for debugging.
+                    // buffer.append(line + "\n");
+                    buffer.append(line);
+                }
+
+                if (buffer.length() == 0) {
+                    // Stream was empty.  No point in parsing.
+                    return null;
+                }
+
+                reviewJsonStr = buffer.toString();
+
+
+            } catch (IOException e) {
+                Log.e(LOG_TAG, "Error ", e);
+                // If the code didn't successfully get the weather data, there's no point in attemping
+                // to parse it.
+                return null;
+            } finally {
+                if (urlConnection != null) {
+                    urlConnection.disconnect();
+                }
+                if (reader != null) {
+                    try {
+                        reader.close();
+                    } catch (final IOException e) {
+                        Log.e(LOG_TAG, "Error closing stream", e);
+                    }
+                }
+            }
+
+            try {
+                return getReviewDataFromJson(reviewJsonStr);
+            } catch (JSONException e) {
+                Log.e(LOG_TAG, e.getMessage(), e);
+                e.printStackTrace();
+            }
+
+            // This will only happen if there was an error getting or parsing the forecast.
+            return null;
+        }
+
+        @Override
+        protected void onPostExecute(ReviewItem[] reviewItems) {
+            if (reviewItems != null) {
+                mReviewAdapter.clear();
+                for (ReviewItem r : reviewItems) {
+                    mReviewAdapter.add(r);
+                }
+                mReviewList.clear();
+                mReviewList.addAll(Arrays.asList(reviewItems));
             }
         }
     }

@@ -47,7 +47,6 @@ public class MovieFragment extends Fragment {
     private final String LOG_TAG = MovieFragment.class.getSimpleName();
 
     private MovieGridAdapter mMovieGridAdapter;
-
     private ArrayList<Movie> mMovieArrayList;
 
     public MovieFragment() {
@@ -60,6 +59,7 @@ public class MovieFragment extends Fragment {
         if (savedInstanceState == null || !savedInstanceState.containsKey("flavors")) {
             mMovieArrayList = new ArrayList<>();
             mMovieGridAdapter = new MovieGridAdapter(getActivity(), new ArrayList<Movie>());
+            updateMovie();
             Log.v(LOG_TAG, "instance state null");
         } else {
             mMovieArrayList = savedInstanceState.getParcelableArrayList("flavors");
@@ -73,12 +73,6 @@ public class MovieFragment extends Fragment {
     public void onSaveInstanceState(Bundle outState) {
         outState.putParcelableArrayList("flavors", mMovieArrayList);
         super.onSaveInstanceState(outState);
-    }
-
-    @Override
-    public void onStart() {
-        super.onStart();
-        updateMovie();
     }
 
     @Override
@@ -133,7 +127,7 @@ public class MovieFragment extends Fragment {
         Log.i(LOG_TAG, "Update Movie method");
     }
 
-    public class FetchMovieTask extends AsyncTask<String, Void, Movie[]> {
+    private class FetchMovieTask extends AsyncTask<String, Void, Movie[]> {
 
         private final String LOG_TAG = FetchMovieTask.class.getSimpleName();
 
@@ -186,7 +180,7 @@ public class MovieFragment extends Fragment {
                 String rating;
                 String release;
 
-                String urlPoster = "http://image.tmdb.org/t/p/w185/";
+                String urlPoster = "http://image.tmdb.org/t/p/w342/";
 
                 JSONObject movieObj = movieArray.getJSONObject(i);
 
@@ -230,7 +224,7 @@ public class MovieFragment extends Fragment {
 
                 URL url = new URL(builtUri.toString());
 
-                Log.v(LOG_TAG, "URL : " + url);
+                Log.v(LOG_TAG, "DISCOVER : " + params[0]);
 
                 // Create the request to OpenWeatherMap, and open the connection
                 urlConnection = (HttpURLConnection) url.openConnection();

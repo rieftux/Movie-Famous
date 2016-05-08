@@ -35,16 +35,18 @@ public class TrailerListAdapter extends ArrayAdapter<TrailerItem>{
         }
 
         TrailerItem trailerItem = getItem(position);
-        trailerHolder.trailer.setText(trailerItem.getName());
+        trailerHolder.tvTrailer.setText(trailerItem.getName());
+
+
 
         return convertView;
     }
 
-    protected static class TrailerHolder {
-        public final TextView trailer;
+    private static class TrailerHolder {
+        public final TextView tvTrailer;
 
         public TrailerHolder(View view) {
-            this.trailer = (TextView) view.findViewById(R.id.trailerTitle);
+            this.tvTrailer = (TextView) view.findViewById(R.id.trailerTitle);
         }
     }
 }

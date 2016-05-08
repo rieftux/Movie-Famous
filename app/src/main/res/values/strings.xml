@@ -9,8 +9,10 @@
     <string name="action_refresh" translatable="false">Refresh</string>
     <string name="action_sort" translatable="false">Sort By</string>
 
-
+    <!-- String to layout -->
     <string name="poster_desc" translatable="false">Poster Film</string>
+    <string name="trailer">Trailer</string>
+    <string name="review">Review</string>
 
 
     <!-- Strings related to Settings -->
