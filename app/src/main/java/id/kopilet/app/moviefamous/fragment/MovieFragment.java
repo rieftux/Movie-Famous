@@ -1,11 +1,8 @@
 package id.kopilet.app.moviefamous.fragment;
 
-import android.content.Intent;
-import android.content.SharedPreferences;
 import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -34,8 +31,8 @@ import java.util.Arrays;
 import java.util.Date;
 
 import id.kopilet.app.moviefamous.BuildConfig;
-import id.kopilet.app.moviefamous.DetailActivity;
 import id.kopilet.app.moviefamous.R;
+import id.kopilet.app.moviefamous.Utility;
 import id.kopilet.app.moviefamous.adapter.MovieGridAdapter;
 import id.kopilet.app.moviefamous.model.Movie;
 
@@ -49,6 +46,10 @@ public class MovieFragment extends Fragment {
     private MovieGridAdapter mMovieGridAdapter;
     private ArrayList<Movie> mMovieArrayList;
 
+    public interface Callback {
+        void onItemSelected(Movie movie);
+    }
+
     public MovieFragment() {
         setHasOptionsMenu(true);
     }
@@ -59,39 +60,12 @@ public class MovieFragment extends Fragment {
         if (savedInstanceState == null || !savedInstanceState.containsKey("flavors")) {
             mMovieArrayList = new ArrayList<>();
             mMovieGridAdapter = new MovieGridAdapter(getActivity(), new ArrayList<Movie>());
-            updateMovie();
             Log.v(LOG_TAG, "instance state null");
         } else {
             mMovieArrayList = savedInstanceState.getParcelableArrayList("flavors");
             mMovieGridAdapter = new MovieGridAdapter(getActivity(), mMovieArrayList);
             Log.v(LOG_TAG, "using saved instance state");
         }
-
-    }
-
-    @Override
-    public void onSaveInstanceState(Bundle outState) {
-        outState.putParcelableArrayList("flavors", mMovieArrayList);
-        super.onSaveInstanceState(outState);
-    }
-
-    @Override
-    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
-        inflater.inflate(R.menu.moviefragment, menu);
-    }
-
-    @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
-        // Handle action bar item clicks here. The action bar will
-        // automatically handle clicks on the Home/Up button, so long
-        // as you specify a parent activity in AndroidManifest.xml.
-        int id = item.getItemId();
-        if (id == R.id.action_refresh) {
-            updateMovie();
-            return true;
-        }
-
-        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -108,19 +82,26 @@ public class MovieFragment extends Fragment {
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
                 Movie movieClick = mMovieGridAdapter.getItem(position);
 
-                Intent intent = new Intent(getActivity(), DetailActivity.class)
-                        .putExtra(Intent.EXTRA_TEXT, movieClick);
-                startActivity(intent);
+                ((Callback) getActivity()).onItemSelected(movieClick);
             }
         });
 
         return rootView;
     }
 
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        super.onActivityCreated(savedInstanceState);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        updateMovie();
+    }
+
     private void updateMovie() {
-        SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(getActivity());
-        String SORT_BY = prefs.getString(getString(R.string.pref_sort_key),
-                getString(R.string.pref_sort_popular));
+        String SORT_BY = Utility.getSortedBy(getActivity());
 
         FetchMovieTask movieTask = new FetchMovieTask();
         movieTask.execute(SORT_BY);
@@ -213,12 +194,19 @@ public class MovieFragment extends Fragment {
                 // Possible parameters are available at The Movie DB's apiary page, at
                 // http://docs.themoviedb.apiary.io/#
 
-                final String MOVIEDB_BASE_URL = "http://api.themoviedb.org/3/discover/movie/";
+//                final String MOVIEDB_BASE_URL = "http://api.themoviedb.org/3/discover/movie/";
+                final String MOVIEDB_BASE_URL = "http://api.themoviedb.org/3/movie/";
                 final String SORT__PARAM = "sort_by";
                 final String API_KEY_PARAM = "api_key";
+/*
 
                 Uri builtUri = Uri.parse(MOVIEDB_BASE_URL).buildUpon()
                         .appendQueryParameter(SORT__PARAM, params[0])
+                        .appendQueryParameter(API_KEY_PARAM, BuildConfig.THE_MOVIE_DB_API_KEY)
+                        .build();
+*/
+                Uri builtUri = Uri.parse(MOVIEDB_BASE_URL).buildUpon()
+                        .appendPath(params[0])
                         .appendQueryParameter(API_KEY_PARAM, BuildConfig.THE_MOVIE_DB_API_KEY)
                         .build();
 
@@ -295,9 +283,35 @@ public class MovieFragment extends Fragment {
                 }
                 mMovieArrayList.clear();
                 mMovieArrayList.addAll(Arrays.asList(movieResults));
-                // New data is back from the server.  Hooray!
+                mMovieGridAdapter.notifyDataSetChanged();
+                Log.v(LOG_TAG, "DOne Asyntask");
             }
         }
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState) {
+        outState.putParcelableArrayList("flavors", mMovieArrayList);
+        super.onSaveInstanceState(outState);
+    }
+
+    @Override
+    public void onCreateOptionsMenu(Menu menu, MenuInflater inflater) {
+        inflater.inflate(R.menu.moviefragment, menu);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle action bar item clicks here. The action bar will
+        // automatically handle clicks on the Home/Up button, so long
+        // as you specify a parent activity in AndroidManifest.xml.
+        int id = item.getItemId();
+        if (id == R.id.action_refresh) {
+            updateMovie();
+            return true;
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
 }

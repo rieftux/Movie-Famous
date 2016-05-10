@@ -44,6 +44,7 @@ import id.kopilet.app.moviefamous.model.TrailerItem;
 public class DetailFragment extends Fragment {
 
     private static final String LOG_TAG = DetailFragment.class.getSimpleName();
+    private static final String DETAIL_MOVIE = "MOVIE";
 
     private TrailerListAdapter mTrailerAdapter;
     private ReviewListAdapter mReviewAdapter;
@@ -53,34 +54,55 @@ public class DetailFragment extends Fragment {
     private Movie movie;
     private int idMovie;
 
+
+    private TextView tvTitle;
+    private TextView tvRelease;
+    private TextView tvRating;
+    private TextView tvSynopsis;
+    private ImageView ivPoster;
+    private NonScrollListView lvTrailer;
+    private NonScrollListView lvReview;
+
+    public static DetailFragment newInstance(Movie movie) {
+        Bundle args = new Bundle();
+        args.putParcelable(DetailFragment.DETAIL_MOVIE, movie);
+
+        DetailFragment detailFragment = new DetailFragment();
+        detailFragment.setArguments(args);
+        return detailFragment;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
 
-        Intent intent = getActivity().getIntent();
-
         View rootView = inflater.inflate(R.layout.fragment_detail, container, false);
 
-        if (intent != null && intent.hasExtra(Intent.EXTRA_TEXT)) {
-            movie = intent.getParcelableExtra(Intent.EXTRA_TEXT);
-            idMovie = movie.getId();
+        tvTitle = (TextView) rootView.findViewById(R.id.textTitle);
+        tvRating = (TextView) rootView.findViewById(R.id.textRating);
+        tvRelease = (TextView) rootView.findViewById(R.id.textRelease);
+        tvSynopsis = (TextView) rootView.findViewById(R.id.textSynopsis);
+        ivPoster = (ImageView) rootView.findViewById(R.id.poster_thumb);
 
-            ImageView poster = (ImageView) rootView.findViewById(R.id.poster_thumb);
-            Picasso.with(getContext()).load(movie.getPoster()).into(poster);
+        lvTrailer = (NonScrollListView) rootView.findViewById(R.id.listTrailer);
+        lvReview = (NonScrollListView) rootView.findViewById(R.id.listReview);
 
-            ((TextView) rootView.findViewById(R.id.textTitle)).setText(movie.getTittle());
-            ((TextView) rootView.findViewById(R.id.textRating)).setText(movie.getRating());
-            ((TextView) rootView.findViewById(R.id.textRelease)).setText(movie.getRelease());
-            ((TextView) rootView.findViewById(R.id.textSynopsis)).setText(movie.getSynopsis());
+        return rootView;
+    }
 
+    @Override
+    public void onActivityCreated(Bundle savedInstanceState) {
+        Bundle arguments = getArguments();
+        if (arguments != null) {
+            movie = arguments.getParcelable(DETAIL_MOVIE);
             mTrailerList = new ArrayList<>();
             mTrailerAdapter = new TrailerListAdapter(getActivity(), mTrailerList);
 
             mReviewList = new ArrayList<>();
             mReviewAdapter = new ReviewListAdapter(getActivity(), mReviewList);
 
-            NonScrollListView lvTrailer = (NonScrollListView) rootView.findViewById(R.id.listTrailer);
-            NonScrollListView lvReview = (NonScrollListView) rootView.findViewById(R.id.listReview);
+            insertData();
+
             lvTrailer.setAdapter(mTrailerAdapter);
             lvReview.setAdapter(mReviewAdapter);
 
@@ -99,12 +121,20 @@ public class DetailFragment extends Fragment {
                     }
                 }
             });
-
-            getTrailer(idMovie);
-            getReview(idMovie);
         }
+        super.onActivityCreated(savedInstanceState);
+    }
 
-        return rootView;
+    private void insertData() {
+        tvTitle.setText(movie.getTittle());
+        tvRating.setText(movie.getRating());
+        tvRelease.setText(movie.getRelease());
+        tvSynopsis.setText(movie.getSynopsis());
+
+        Picasso.with(getContext()).load(movie.getPoster()).into(ivPoster);
+
+        getTrailer(movie.getId());
+        getReview(movie.getId());
     }
 
     private void getTrailer(int id) {
@@ -235,11 +265,11 @@ public class DetailFragment extends Fragment {
         @Override
         protected void onPostExecute(TrailerItem[] trailerItems) {
             if (trailerItems != null) {
-                mTrailerAdapter.clear();
+       /*         mTrailerAdapter.clear();
                 for (TrailerItem t : trailerItems) {
                     mTrailerAdapter.add(t);
 
-                }
+                }*/
                 mTrailerList.clear();
                 mTrailerList.addAll(Arrays.asList(trailerItems));
                 mTrailerAdapter.notifyDataSetChanged();
@@ -378,12 +408,13 @@ public class DetailFragment extends Fragment {
         @Override
         protected void onPostExecute(ReviewItem[] reviewItems) {
             if (reviewItems != null) {
-                mReviewAdapter.clear();
+              /*  mReviewAdapter.clear();
                 for (ReviewItem r : reviewItems) {
                     mReviewAdapter.add(r);
-                }
+                }*/
                 mReviewList.clear();
                 mReviewList.addAll(Arrays.asList(reviewItems));
+                mReviewAdapter.notifyDataSetChanged();
             }
         }
     }

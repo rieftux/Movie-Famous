@@ -30,10 +30,13 @@
     <string name="pref_sort_key" translatable="false">sort_by</string>
 
     <!-- Value in SharedPreferences for sort by popularity option [CHAR LIMIT=NONE] -->
-    <string name="pref_sort_popular" translatable="false">popularity.desc</string>
+    <!--<string name="pref_sort_popular" translatable="false">popularity.desc</string>-->
+    <string name="pref_sort_popular" translatable="false">popular</string>
 
     <!-- Value in SharedPreferences for sort by top rated option [CHAR LIMIT=NONE] -->
-    <string name="pref_sort_top_rated" translatable="false">vote_average.desc</string>
+    <!--<string name="pref_sort_top_rated" translatable="false">vote_average.desc</string>-->
+    <string name="pref_sort_top_rated" translatable="false">top_rated</string>
+
     <string name="title_activity_settings">Settings</string>
 
 

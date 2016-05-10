@@ -10,6 +10,13 @@
     android:horizontalSpacing="0dp"
     android:stretchMode="columnWidth"
     android:gravity="center"
-    tools:context=".fragment.MovieFragment" >
+    tools:context=".fragment.MovieFragment" />
 
-</GridView>
+<!--<android.support.v7.widget.RecyclerView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/gridview_movie"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="center"
+    tools:context=".fragment.MovieFragment" />-->
